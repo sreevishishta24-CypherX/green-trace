@@ -1,0 +1,68 @@
+[
+  {
+    "id": "c001",
+    "clause_text": "The project shall maintain a 100 metre buffer from the perennial river and no permanent structures shall be within this distance.",
+    "numeric_distance": null,
+    "distance_unit": null,
+    "feature": null,
+    "qualitative_flag": null,
+    "note": null,
+    "annotator": null,
+    "timestamp": null
+  },
+  {
+    "id": "c002",
+    "clause_text": "No activity shall be carried out within 50 m of the stream during construction and operations.",
+    "numeric_distance": null,
+    "distance_unit": null,
+    "feature": null,
+    "qualitative_flag": null,
+    "note": null,
+    "annotator": null,
+    "timestamp": null
+  },
+  {
+    "id": "c003",
+    "clause_text": "Adequate measures shall be taken to prevent discharge into nearby waterbodies.",
+    "numeric_distance": null,
+    "distance_unit": null,
+    "feature": null,
+    "qualitative_flag": null,
+    "note": null,
+    "annotator": null,
+    "timestamp": null
+  },
+  {
+    "id": "c004",
+    "clause_text": "No development within 200 metres of the notified wetland; tree felling within the buffer is prohibited.",
+    "numeric_distance": null,
+    "distance_unit": null,
+    "feature": null,
+    "qualitative_flag": null,
+    "note": null,
+    "annotator": null,
+    "timestamp": null
+  },
+  {
+    "id": "c005",
+    "clause_text": "The project proponent shall ensure a 30 m greenbelt around the river to prevent erosion.",
+    "numeric_distance": null,
+    "distance_unit": null,
+    "feature": null,
+    "qualitative_flag": null,
+    "note": null,
+    "annotator": null,
+    "timestamp": null
+  },
+  {
+    "id": "c006",
+    "clause_text": "Appropriate mitigation measures shall be implemented to avoid alteration of natural drainage patterns.",
+    "numeric_distance": null,
+    "distance_unit": null,
+    "feature": null,
+    "qualitative_flag": null,
+    "note": null,
+    "annotator": null,
+    "timestamp": null
+  }
+]

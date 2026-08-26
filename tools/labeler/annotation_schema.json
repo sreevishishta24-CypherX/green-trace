@@ -1,0 +1,15 @@
+{
+  "name": "ec_clause_annotation",
+  "description": "Schema for annotating EC clauses for GREENTRACE pilot (buffer rules)",
+  "fields": [
+    {"name": "id", "type": "string", "description": "unique clause id"},
+    {"name": "clause_text", "type": "string", "description": "raw clause text"},
+    {"name": "numeric_distance", "type": ["number", "null"], "description": "extracted numeric distance (meters)"},
+    {"name": "distance_unit", "type": ["string", "null"], "description": "unit if present (m/metre/km)"},
+    {"name": "feature", "type": ["string", "null"], "description": "feature referenced (river, stream, waterbody)"},
+    {"name": "qualitative_flag", "type": ["string", "null"], "description": "qualitative requirement tag (e.g., 'adequate measures')"},
+    {"name": "note", "type": ["string", "null"], "description": "annotator note"},
+    {"name": "annotator", "type": ["string", "null"], "description": "annotator id"},
+    {"name": "timestamp", "type": ["string", "null"], "description": "ISO timestamp"}
+  ]
+}

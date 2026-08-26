@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>GREENTRACE Admin</title>
+    <style>
+      body{font-family:Inter, Arial, Helvetica, sans-serif;margin:18px;background:#f7fafc;color:#072032}
+      .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+      .controls{display:flex;gap:8px;align-items:center}
+      .btn{padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
+      .btn.ghost{background:transparent;border:1px solid #dbe7ef}
+      table{border-collapse:collapse;width:100%;background:#fff;border-radius:8px;overflow:hidden}
+      th,td{padding:8px;border-bottom:1px solid #eef4f8;text-align:left}
+      th{background:#fbfdfe;color:#084552;font-weight:700}
+      tr:hover{background:#fbfcfd}
+      #msg{color:#2b6a6a}
+      h2{margin:0 0 5px;font-size:clamp(1.55rem,3vw,2.25rem);letter-spacing:-.03em}
+      body>div:first-of-type{flex-wrap:wrap;gap:12px}
+      body>div:first-of-type>div{flex-wrap:wrap}
+      body>div:first-of-type input{padding:8px;border:1px solid #dbe7ef;border-radius:6px;width:125px!important}
+      body>div:first-of-type .btn{background:#d8f36b;color:#14211f}
+      body>div:first-of-type .btn.ghost{background:transparent;color:#17221f}
+      .table-wrap{margin-top:18px;overflow:auto;border:1px solid #d3ded4;border-radius:8px;background:#fff}
+      table{min-width:920px;border:0}
+      td{vertical-align:top}
+      td:nth-child(8),td:nth-child(9){max-width:260px;white-space:normal;word-break:break-word}
+      @media(max-width:760px){
+        body{margin:14px}
+        body>div:first-of-type{align-items:stretch;flex-direction:column}
+        body>div:first-of-type>div{width:100%}
+        body>div:first-of-type>div:last-child{display:grid;grid-template-columns:1fr 1fr}
+        body>div:first-of-type>div:last-child #admin_badge{grid-column:1/-1}
+        body>div:first-of-type input,body>div:first-of-type button{width:100%!important}
+      }
+
+      /* Command-center theme */
+      :root{--ink:#101817;--ink-2:#172321;--line:#2d403c;--paper:#e9f0e8;--muted:#91aaa0;--mint:#c8f169;--cyan:#6ee7d4;--orange:#ff9b65}
+      html{background:var(--ink)}
+      body{position:relative;max-width:1500px;margin:0 auto;padding:38px 5vw 64px;background:var(--ink);color:var(--paper);font-family:"Aptos Display","Trebuchet MS",sans-serif}
+      body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,#000,transparent 78%)}
+      h2{position:relative;color:var(--paper);font-size:clamp(2rem,5vw,4.5rem);line-height:.95;max-width:850px;margin:0 0 26px;text-transform:uppercase;letter-spacing:-.055em}
+      body>div:first-of-type{position:relative;background:rgba(23,35,33,.88);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+      .btn{font-size:.74rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;transition:transform .18s,filter .18s}
+      .btn:hover{filter:brightness(1.12);transform:translateY(-2px)}
+      body>div:first-of-type .btn{background:var(--mint);color:var(--ink);box-shadow:3px 3px 0 #718e39}
+      body>div:first-of-type .btn.ghost{background:transparent;color:var(--paper);border-color:#49615a;box-shadow:none}
+      #admin_badge{background:rgba(110,231,212,.12)!important;color:var(--cyan)!important;border:1px solid rgba(110,231,212,.28)}
+      body>div:first-of-type input{background:#0f1917;color:var(--paper);border-color:#39514a}
+      #msg{color:var(--cyan);font-weight:800}
+      .table-wrap{position:relative;margin-top:22px;background:rgba(23,35,33,.9);border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+      table{background:transparent;color:var(--paper)}
+      th{background:#203430;color:var(--mint);border-bottom:1px solid #49615a;font-size:.7rem;letter-spacing:.12em}
+      td{border-bottom:1px solid #293b37;color:#d6e2d8}
+      tr:hover{background:rgba(110,231,212,.06)}
+      td input[type=checkbox]{accent-color:var(--mint);width:17px;height:17px}
+      @media(max-width:760px){body{padding:26px 16px 42px}h2{font-size:2.6rem}}
+    </style>
+  </head>
+  <body>
+    <h2>Admin — Annotation Management</h2>
+    <div class="topbar">
+      <div class="controls">
+        <button id="refresh" class="btn ghost">Refresh</button>
+        <button id="requeue_selected" class="btn ghost">Requeue Selected</button>
+        <button id="requeue_all" class="btn ghost">Requeue All</button>
+        <button id="mark_reviewed" class="btn ghost">Mark Reviewed</button>
+        <button id="unreview_selected" class="btn ghost">Unreview Selected</button>
+        <a href="/api/export.csv" class="btn ghost">Download CSV</a>
+        <span id="msg"></span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="admin_badge" style="padding:6px 10px;border-radius:999px;background:#eaf6f5;color:#064b45;font-weight:600">Not logged in</div>
+        <input id="admin_user" placeholder="admin user" style="width:120px"/>
+        <input id="admin_pass" placeholder="password" type="password" style="width:120px"/>
+        <button id="admin_login" class="btn">Admin Login</button>
+        <button id="admin_logout" class="btn ghost">Logout</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="tbl">
+        <thead><tr><th></th><th>ID</th><th>Annotated</th><th>Annotator</th><th>Reviewed</th><th>Reviewer</th><th>Review ts</th><th>Clause (truncated)</th><th>Note</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <script>
+      function authHeaders(){
+        const token = localStorage.getItem('labeler_token');
+        const h = {'Content-Type':'application/json'};
+        if(token) h['Authorization'] = 'Bearer ' + token;
+        return h;
+      }
+
+      async function load(){
+        const res = await fetch('/api/list', {headers: authHeaders()});
+        const j = await res.json();
+        const tbody = document.querySelector('#tbl tbody'); tbody.innerHTML = '';
+        for(const it of j){
+          const tr = document.createElement('tr');
+          const annotator = (it.annotation && it.annotation.annotator) ? it.annotation.annotator : '';
+          const note = (it.annotation && it.annotation.note) ? it.annotation.note : '';
+          const clause = (it.clause_text || '').slice(0,120);
+          const reviewed = it.reviewed ? 'yes' : 'no';
+          const reviewer = it.reviewer || '';
+          const review_ts = it.review_timestamp || '';
+          tr.innerHTML = `<td><input type="checkbox" data-id="${it.id}"></td><td>${it.id}</td><td>${it.annotated? 'yes':'no'}</td><td>${annotator}</td><td>${reviewed}</td><td>${reviewer}</td><td>${review_ts}</td><td>${clause}</td><td>${note}</td>`;
+          tbody.appendChild(tr);
+        }
+      }
+
+      document.getElementById('refresh').addEventListener('click', ()=>{ load(); });
+
+      document.getElementById('requeue_selected').addEventListener('click', async ()=>{
+        const boxes = Array.from(document.querySelectorAll('input[type=checkbox]:checked'));
+        const ids = boxes.map(b=>b.dataset.id);
+        if(ids.length === 0){ document.getElementById('msg').textContent = 'No items selected'; return; }
+        const res = await fetch('/api/requeue_bulk', {method:'POST', headers: authHeaders(), body: JSON.stringify({ids})});
+        const j = await res.json(); document.getElementById('msg').textContent = `Requeued ${j.updated||0}`; load();
+      });
+
+      document.getElementById('mark_reviewed').addEventListener('click', async ()=>{
+        const boxes = Array.from(document.querySelectorAll('input[type=checkbox]:checked'));
+        const ids = boxes.map(b=>b.dataset.id);
+        if(ids.length === 0){ document.getElementById('msg').textContent = 'No items selected'; return; }
+        const reviewer = prompt('Reviewer name or id:', 'reviewer1') || 'reviewer1';
+        const res = await fetch('/api/review_bulk', {method:'POST', headers: authHeaders(), body: JSON.stringify({ids, reviewer})});
+        const j = await res.json(); document.getElementById('msg').textContent = `Reviewed ${j.updated||0}`; load();
+      });
+
+      document.getElementById('unreview_selected').addEventListener('click', async ()=>{
+        const boxes = Array.from(document.querySelectorAll('input[type=checkbox]:checked'));
+        const ids = boxes.map(b=>b.dataset.id);
+        if(ids.length === 0){ document.getElementById('msg').textContent = 'No items selected'; return; }
+        for(const id of ids){ await fetch('/api/unreview', {method:'POST', headers: authHeaders(), body: JSON.stringify({id})}); }
+        document.getElementById('msg').textContent = `Unreviewed ${ids.length}`; load();
+      });
+
+      document.getElementById('requeue_all').addEventListener('click', async ()=>{
+        if(!confirm('Requeue ALL items? This will reset annotations.')) return;
+        const res = await fetch('/api/requeue_all', {method:'POST', headers: authHeaders()}); const j = await res.json(); document.getElementById('msg').textContent = `Requeued ${j.updated||0}`; load();
+      });
+
+      document.getElementById('admin_login').addEventListener('click', async ()=>{
+        const u = document.getElementById('admin_user').value;
+        const p = document.getElementById('admin_pass').value;
+        if(!u||!p) return alert('enter username and password');
+        const res = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username: u, password: p})});
+        const j = await res.json();
+        if(res.ok && j.token){ localStorage.setItem('labeler_token', j.token); alert('admin login ok'); load(); }
+        else alert('login failed: ' + (j.error||'unknown'));
+      });
+
+      document.getElementById('admin_logout').addEventListener('click', async ()=>{
+        const token = localStorage.getItem('labeler_token');
+        const headers = {};
+        if(token) headers['Authorization'] = 'Bearer ' + token;
+        await fetch('/api/logout', {method:'POST', headers});
+        localStorage.removeItem('labeler_token');
+          alert('logged out'); document.getElementById('admin_badge').textContent = 'Not logged in'; load();
+      });
+
+        // update admin badge when login occurs
+        (function watchLogin(){
+          const orig = localStorage.getItem('labeler_token');
+          setInterval(()=>{
+            const t = localStorage.getItem('labeler_token');
+            const badge = document.getElementById('admin_badge');
+            if(t){ const u = document.getElementById('admin_user').value || 'admin'; badge.textContent = u; }
+            else badge.textContent = 'Not logged in';
+          }, 1000);
+        })();
+
+      // initial load
+      load();
+    </script>
+  </body>
+</html>

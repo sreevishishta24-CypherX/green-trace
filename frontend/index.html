@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Waterbody Buffer Detection</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      :root {
+        --bg: #07111f;
+        --panel: rgba(14, 25, 38, 0.85);
+        --card: rgba(17, 29, 49, 0.9);
+        --border: rgba(148, 163, 184, 0.2);
+        --text: #e5eefb;
+        --muted: #9fb3ce;
+        --primary: #4ecdc4;
+        --primary-strong: #31b5af;
+        --danger: #ff5f7a;
+        --warning: #fbbf24;
+        --good: #34d399;
+        --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        height: 100%;
+        font-family: Inter, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(34,197,94,0.18), transparent 25%),
+          radial-gradient(circle at top right, rgba(14,165,233,0.18), transparent 25%),
+          var(--bg);
+        color: var(--text);
+      }
+
+      body { min-height: 100vh; }
+
+      .app-shell {
+        display: grid;
+        grid-template-columns: 420px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        background: rgba(7, 17, 31, 0.9);
+        border-right: 1px solid var(--border);
+        padding: 28px 22px;
+        backdrop-filter: blur(10px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .brand-badge {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--primary), #2a9dff);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        color: #072032;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 1.18rem;
+        line-height: 1.2;
+      }
+
+      .brand small {
+        color: var(--muted);
+        display: block;
+      }
+
+      .form-card, .history-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .form-card { padding: 18px; }
+
+      .section-title {
+        margin: 0 0 12px;
+        font-size: 0.85rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .field { margin-bottom: 14px; }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.84rem;
+        color: var(--muted);
+      }
+
+      input[type="text"], input[type="file"] { width: 100%; }
+
+      input[type="text"] {
+        background: rgba(15, 23, 42, 0.7);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 11px 12px;
+        font-size: 0.96rem;
+        outline: none;
+      }
+
+      input[type="text"]:focus {
+        border-color: rgba(78, 205, 196, 0.7);
+        box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.15);
+      }
+
+      input[type="file"] {
+        color: var(--muted);
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0 18px;
+        font-size: 0.95rem;
+      }
+
+      .checkbox-row input {
+        width: 18px;
+        height: 18px;
+      }
+
+      .button-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+
+      button {
+        border: none;
+        border-radius: 12px;
+        padding: 11px 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+      }
+
+      button:hover { transform: translateY(-1px); }
+
+      .primary-btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+        color: #062028;
+      }
+
+      .secondary-btn {
+        background: rgba(148, 163, 184, 0.12);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+
+      .status-box {
+        margin-top: 16px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        color: var(--muted);
+        min-height: 80px;
+        font-size: 0.92rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+
+      .history-card {
+        margin-top: 18px;
+        padding: 16px 18px;
+      }
+
+      .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .history-item {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .history-item small { color: var(--muted); }
+
+      .history-item button {
+        background: rgba(78, 205, 196, 0.1);
+        color: var(--primary);
+        border: 1px solid rgba(78, 205, 196, 0.3);
+        padding: 7px 10px;
+      }
+
+      .main { padding: 24px; }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .topbar h2 {
+        margin: 0;
+        font-size: clamp(1.6rem, 2vw, 2.1rem);
+      }
+
+      .pill {
+        background: rgba(52, 211, 153, 0.1);
+        color: var(--good);
+        border: 1px solid rgba(52, 211, 153, 0.3);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(140px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .stat-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        min-height: 110px;
+        padding: 16px 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .stat-card .label {
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        display: block;
+        margin-bottom: 12px;
+      }
+
+      .stat-card .value {
+        font-size: clamp(1.5rem, 2vw, 2.2rem);
+        font-weight: 700;
+      }
+
+      .big-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 20px;
+      }
+
+      .map-panel, .results-panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .map-panel { min-height: 520px; }
+
+      .map-header, .panel-header {
+        padding: 16px 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        background: rgba(12, 19, 29, 0.66);
+      }
+
+      .map-header h3, .panel-header h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      #map {
+        height: 470px;
+        width: 100%;
+        background: #0f172a;
+      }
+
+      .results-panel { padding: 0 0 18px; }
+
+      .result-body { padding: 18px; }
+
+      .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.94rem;
+      }
+
+      .report-table th, .report-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+        text-align: left;
+      }
+
+      .report-table th { color: var(--muted); }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .badge.good {
+        background: rgba(52, 211, 153, 0.12);
+        color: var(--good);
+      }
+
+      .badge.bad {
+        background: rgba(255, 95, 122, 0.1);
+        color: var(--danger);
+      }
+
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .link-btn {
+        display: inline-block;
+        text-decoration: none;
+        color: var(--text);
+        background: rgba(148, 163, 184, 0.12);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 7px 10px;
+        font-size: 0.85rem;
+      }
+
+      .preview-image {
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        margin-top: 12px;
+        background: rgba(15, 23, 42, 0.7);
+      }
+
+      @media (max-width: 1100px) {
+        .app-shell { grid-template-columns: 1fr; }
+        .main { padding-top: 10px; }
+        .big-panel { grid-template-columns: 1fr; }
+      }
+
+      @media (max-width: 640px) {
+        .stats-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-badge">WB</div>
+          <div>
+            <h1>Waterbody Buffer<br />Detection</h1>
+            <small>Fast compliance screening</small>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <p class="section-title">Detection inputs</p>
+
+          <div class="field">
+            <label for="bbox">BBox (optional):</label>
+            <input id="bbox" type="text" placeholder="77.55,12.85,77.57,12.87" />
+          </div>
+
+          <div class="field">
+            <label for="project_point">Project point (optional):</label>
+            <input id="project_point" type="text" placeholder="77.563,12.859" />
+          </div>
+
+          <div class="field">
+            <label for="ec_pdf">EC PDF (optional):</label>
+            <input id="ec_pdf" type="file" accept="application/pdf" />
+          </div>
+
+          <div class="field">
+            <label for="project_geojson">Project GeoJSON (optional):</label>
+            <input id="project_geojson" type="file" accept="application/geo+json,application/json,.geojson" />
+          </div>
+
+          <div class="checkbox-row">
+            <input id="enable_ndwi" type="checkbox" />
+            <label for="enable_ndwi" style="margin:0; display:inline; color: var(--text);">Enable NDWI analysis</label>
+          </div>
+
+          <div class="button-row">
+            <button id="run-btn" class="primary-btn">Run detection</button>
+            <button id="sample-btn" class="secondary-btn" type="button">Load sample</button>
+          </div>
+
+          <div id="status" class="status-box">Idle. Upload a project or enter a point to start.</div>
+        </div>
+
+        <div class="history-card">
+          <p class="section-title">Recent runs</p>
+          <div id="history-list" class="history-list"></div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar">
+          <h2>Environmental clearance screening dashboard</h2>
+          <span class="pill">Live analysis</span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="label">Violation checks</span>
+            <span id="stat-checks" class="value">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="label">High risk</span>
+            <span id="stat-risk" class="value">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="label">Buffer zones</span>
+            <span id="stat-buffers" class="value">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="label">Last run</span>
+            <span id="stat-last" class="value">—</span>
+          </div>
+        </div>
+
+        <div class="big-panel">
+          <section class="map-panel">
+            <div class="map-header">
+              <h3>Spatial evidence</h3>
+              <span id="map-status" class="badge good">Ready</span>
+            </div>
+            <div id="map"></div>
+          </section>
+
+          <aside class="results-panel">
+            <div class="panel-header">
+              <h3>Detection results</h3>
+            </div>
+            <div class="result-body">
+              <table class="report-table">
+                <thead>
+                  <tr>
+                    <th>Buffer</th>
+                    <th>Intersects</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody id="report-body"></tbody>
+              </table>
+
+              <div class="links" id="links"></div>
+              <img id="map-preview" class="preview-image" alt="Generated map preview" style="display:none;" />
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      const map = L.map('map').setView([20.2, 78.2], 5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      const state = { evidenceLayer: null, ndwiLayer: null };
+
+      function setStatus(message, tone='neutral') {
+        const el = document.getElementById('status');
+        el.textContent = message;
+        el.style.color = tone === 'error' ? '#ff8aa3' : tone === 'success' ? '#7ef7c8' : '#9fb3ce';
+      }
+
+      function renderHistory(runs) {
+        const list = document.getElementById('history-list');
+        list.innerHTML = '';
+        if (!runs || !runs.length) {
+          list.innerHTML = '<div class="history-item"><small>No runs yet.</small></div>';
+          return;
+        }
+        for (const run of runs) {
+          const item = document.createElement('div');
+          item.className = 'history-item';
+          item.innerHTML = `
+            <div>
+              <strong>${run.id}</strong><br />
+              <small>${run.report_url ? 'report available' : 'no report'}</small>
+            </div>
+            <button type="button" data-run-id="${run.id}">Open</button>
+          `;
+          const btn = item.querySelector('button');
+          btn.addEventListener('click', () => {
+            if (run.evidence_url) fetchAndRenderEvidence(run.evidence_url);
+            if (run.map_url) {
+              const img = document.getElementById('map-preview');
+              img.src = run.map_url;
+              img.style.display = 'block';
+            }
+          });
+          list.appendChild(item);
+        }
+      }
+
+      async function loadHistory() {
+        try {
+          const res = await fetch('/runs');
+          const data = await res.json();
+          renderHistory(data.runs || []);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function updateStats(report) {
+        const violations = report && Array.isArray(report.violations) ? report.violations : [];
+        const checks = violations.length;
+        const risk = violations.filter(v => v.intersects).length;
+        const buffers = new Set((violations || []).map(v => v.buffer_m)).size;
+        document.getElementById('stat-checks').textContent = String(checks);
+        document.getElementById('stat-risk').textContent = String(risk);
+        document.getElementById('stat-buffers').textContent = String(buffers);
+        document.getElementById('stat-last').textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      }
+
+      function renderReport(report) {
+        const tbody = document.getElementById('report-body');
+        tbody.innerHTML = '';
+        if (!report || !Array.isArray(report.violations) || !report.violations.length) {
+          tbody.innerHTML = '<tr><td colspan="3">No violations recorded.</td></tr>';
+          return;
+        }
+        for (const item of report.violations) {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${Number(item.buffer_m).toFixed(0)} m</td>
+            <td><span class="badge ${item.intersects ? 'bad' : 'good'}">${item.intersects ? 'Yes' : 'No'}</span></td>
+            <td>${item.num_intersections ?? 0}</td>
+          `;
+          tbody.appendChild(row);
+        }
+        updateStats(report);
+      }
+
+      function renderLinks(obj) {
+        const links = document.getElementById('links');
+        links.innerHTML = '';
+        const items = [
+          ['Report', obj.report_url],
+          ['Evidence', obj.evidence_url],
+          ['Map', obj.map_url],
+          ['EC parse', obj.ec_parse_url],
+        ].filter(([, value]) => !!value);
+
+        for (const [label, href] of items) {
+          if (!href) continue;
+          const a = document.createElement('a');
+          a.href = href;
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.className = 'link-btn';
+          a.textContent = label;
+          links.appendChild(a);
+        }
+
+        if (obj.map_url) {
+          const img = document.getElementById('map-preview');
+          img.src = obj.map_url;
+          img.style.display = 'block';
+        }
+      }
+
+      async function fetchAndRenderEvidence(url) {
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+          if (state.evidenceLayer) state.evidenceLayer.remove();
+          state.evidenceLayer = L.geoJSON(data, {
+            style: (feature) => {
+              if (feature.properties && feature.properties.type === 'project') return { color: '#34d399', weight: 2, fillOpacity: 0.08 };
+              if (feature.properties && feature.properties.type === 'buffer') return { color: '#fbbf24', weight: 1, fillOpacity: 0.2 };
+              return { color: '#3b82f6', weight: 1.5, fillOpacity: 0.18 };
+            },
+            onEachFeature: (feature, layer) => {
+              if (feature.properties) {
+                const props = JSON.stringify(feature.properties, null, 2);
+                layer.bindPopup(`<pre style="white-space:pre-wrap; font-size:12px;">${props}</pre>`);
+              }
+            }
+          }).addTo(map);
+          const bounds = state.evidenceLayer.getBounds();
+          if (bounds && bounds.isValid()) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
+          document.getElementById('map-status').textContent = 'Evidence loaded';
+          document.getElementById('map-status').className = 'badge good';
+        } catch (err) {
+          console.error('Could not render evidence:', err);
+          setStatus('Evidence preview failed to load.', 'error');
+        }
+      }
+
+      async function runDetection(event) {
+        event.preventDefault();
+        const form = new FormData();
+        const bbox = document.getElementById('bbox').value.trim();
+        const point = document.getElementById('project_point').value.trim();
+        const ecFile = document.getElementById('ec_pdf').files[0];
+        const geoFile = document.getElementById('project_geojson').files[0];
+        const enableNdwi = document.getElementById('enable_ndwi').checked;
+
+        if (bbox) form.append('bbox', bbox);
+        if (point) form.append('project_point', point);
+        if (ecFile) form.append('ec_pdf', ecFile);
+        if (geoFile) form.append('project_geojson', geoFile);
+        form.append('enable_ndwi', enableNdwi ? '1' : '0');
+
+        setStatus('Sending detection request...');
+        document.getElementById('map-status').textContent = 'Processing';
+        document.getElementById('map-status').className = 'badge';
+
+        try {
+          const response = await fetch('/detect', { method: 'POST', body: form });
+          const payload = await response.json();
+
+          if (!response.ok) {
+            throw new Error(payload.error || 'Detection request failed');
+          }
+
+          setStatus('Detection completed successfully.', 'success');
+          renderReport(payload.report);
+          renderLinks(payload);
+          if (payload.evidence_url) await fetchAndRenderEvidence(payload.evidence_url);
+          if (payload.ndwi_url && state.ndwiLayer) state.ndwiLayer.remove();
+          if (payload.ndwi_url) {
+            state.ndwiLayer = L.imageOverlay(payload.ndwi_url, [[-90, -180], [90, 180]], { opacity: 0.6 }).addTo(map);
+          }
+          await loadHistory();
+        } catch (err) {
+          console.error(err);
+          setStatus(err.message || 'Detection failed.', 'error');
+          document.getElementById('map-status').textContent = 'Failed';
+          document.getElementById('map-status').className = 'badge bad';
+        }
+      }
+
+      document.getElementById('run-btn').addEventListener('click', runDetection);
+      document.getElementById('sample-btn').addEventListener('click', () => {
+        document.getElementById('bbox').value = '77.55,12.85,77.57,12.87';
+        document.getElementById('project_point').value = '77.563,12.859';
+      });
+
+      loadHistory();
+      renderReport({ violations: [] });
+      setStatus('Idle. Upload a project or enter a point to start.');
+    </script>
+  </body>
+</html>

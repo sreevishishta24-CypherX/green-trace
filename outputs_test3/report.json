@@ -1,0 +1,55 @@
+{
+  "violations": [
+    {
+      "buffer_m": 30.0,
+      "intersects": true,
+      "num_intersections": 1
+    },
+    {
+      "buffer_m": 50.0,
+      "intersects": true,
+      "num_intersections": 1
+    },
+    {
+      "buffer_m": 100.0,
+      "intersects": true,
+      "num_intersections": 1
+    }
+  ],
+  "summary": {
+    "violations_found": 3,
+    "tested_buffers_m": [
+      30.0,
+      50.0,
+      100.0
+    ],
+    "status": "likely_violation",
+    "confidence": "low"
+  },
+  "issues": [
+    "Overpass water-data retrieval failed, so the analysis used a synthetic fallback water geometry. This can create a false positive and should be treated as a demo-level result, not a verified field assessment.",
+    "At least one tested buffer zone intersects the project footprint. Treat this as a likely compliance issue requiring document review and a field verification check."
+  ],
+  "findings": [
+    {
+      "buffer_m": 30.0,
+      "risk": "high",
+      "message": "Project intersects the 30 m protected water buffer in 1 area(s)."
+    },
+    {
+      "buffer_m": 50.0,
+      "risk": "high",
+      "message": "Project intersects the 50 m protected water buffer in 1 area(s)."
+    },
+    {
+      "buffer_m": 100.0,
+      "risk": "high",
+      "message": "Project intersects the 100 m protected water buffer in 1 area(s)."
+    }
+  ],
+  "data_quality": {
+    "water_source": "synthetic_fallback",
+    "project_input": "point_or_polygon",
+    "water_feature_count": 1
+  }
+}

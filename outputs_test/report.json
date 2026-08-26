@@ -1,0 +1,19 @@
+{
+  "violations": [
+    {
+      "buffer_m": 30.0,
+      "intersects": true,
+      "num_intersections": 1
+    },
+    {
+      "buffer_m": 50.0,
+      "intersects": true,
+      "num_intersections": 1
+    },
+    {
+      "buffer_m": 100.0,
+      "intersects": true,
+      "num_intersections": 1
+    }
+  ]
+}

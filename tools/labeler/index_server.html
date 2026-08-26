@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>GREENTRACE Multi-user Labeler</title>
+    <style>
+      body{font-family:Inter, Arial, Helvetica, sans-serif;margin:18px;background:#f4f6f8;color:#072032}
+      .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+      #clause{white-space:pre-wrap;background:#ffffff;padding:14px;border-radius:8px;border:1px solid #e3e8ee;box-shadow:0 6px 18px rgba(12,25,40,0.06)}
+      .controls{margin-top:14px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+      .btn{padding:9px 12px;margin-right:8px;border-radius:8px;border:none;cursor:pointer}
+      .btn.primary{background:linear-gradient(135deg,#4ecdc4,#31b5af);color:#042226}
+      .btn.ghost{background:transparent;border:1px solid #dbe7ef;color:#072032}
+      label{display:block;margin-top:6px;font-size:14px}
+      input[type=text],input[type=number],select{padding:8px;width:100%;border:1px solid #e3e8ee;border-radius:8px}
+      .right{justify-self:end}
+      #uploads_panel img{max-width:220px;border-radius:8px;border:1px solid #e6eef6;margin-top:6px}
+      #status{color:#6b7f8f}
+      h2{margin:0 0 5px;font-size:clamp(1.55rem,3vw,2.25rem);letter-spacing:-.03em}
+      body>p{margin:0 0 18px;color:#6b7f8f;max-width:680px}
+      .topbar{gap:16px;flex-wrap:wrap}
+      .topbar>div{flex-wrap:wrap}
+      .topbar input{width:125px!important}
+      .controls>div{background:#fff;padding:10px;border:1px solid #e3e8ee;border-radius:8px}
+      .controls input,.controls select{display:block;min-height:38px}
+      #uploads_panel{padding:16px;background:#fff;border:1px solid #e3e8ee;border-radius:8px}
+      #uploads_panel h3{margin-top:0}
+      @media(max-width:760px){
+        body{margin:14px}
+        .topbar{align-items:stretch;flex-direction:column}
+        .topbar>div{width:100%}
+        .topbar>div:last-child{display:grid;grid-template-columns:1fr 1fr}
+        .topbar>div:last-child #annotator_badge{grid-column:1/-1}
+        .topbar>div:last-child input,.topbar>div:last-child button{width:100%!important}
+        .controls{grid-template-columns:1fr}
+      }
+
+      /* Command-center theme */
+      :root{--ink:#101817;--ink-2:#172321;--line:#2d403c;--paper:#e9f0e8;--muted:#91aaa0;--mint:#c8f169;--cyan:#6ee7d4;--orange:#ff9b65}
+      html{background:var(--ink)}
+      body{position:relative;max-width:1440px;margin:0 auto;padding:38px 5vw 64px;background:var(--ink);color:var(--paper);font-family:"Aptos Display","Trebuchet MS",sans-serif}
+      body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,#000,transparent 78%)}
+      h2{position:relative;color:var(--paper);font-size:clamp(2rem,5vw,4.5rem);line-height:.95;max-width:850px;margin:0 0 14px;text-transform:uppercase;letter-spacing:-.055em}
+      body>p{position:relative;color:var(--muted);font-size:1rem;margin:0 0 30px;max-width:650px}
+      .topbar{position:relative;background:rgba(23,35,33,.88);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+      .btn{font-size:.76rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;transition:transform .18s,filter .18s}
+      .btn:hover{filter:brightness(1.12);transform:translateY(-2px)}
+      .btn.primary{background:var(--mint);color:var(--ink);box-shadow:4px 4px 0 #718e39}
+      .btn.ghost{color:var(--paper);border-color:#49615a;background:transparent}
+      #annotator_badge{background:rgba(110,231,212,.12)!important;color:var(--cyan)!important;border:1px solid rgba(110,231,212,.28)}
+      #clause{position:relative;min-height:155px;margin-top:22px!important;padding:26px 28px;background:linear-gradient(120deg,#203430,#172321);border:1px solid #3b554d;border-radius:12px;color:#f4f8ee;font-family:Georgia,serif;font-size:clamp(1.1rem,2vw,1.55rem);line-height:1.5;box-shadow:0 20px 40px rgba(0,0,0,.22)}
+      #clause:before{content:"CURRENT CLAUSE";display:block;margin-bottom:12px;color:var(--cyan);font:800 .68rem "Aptos Display",sans-serif;letter-spacing:.16em}
+      .controls{position:relative;margin-top:14px;gap:10px}
+      .controls>div{background:rgba(23,35,33,.88);border:1px solid var(--line);border-radius:10px;padding:14px}
+      label{color:var(--muted);font-weight:700;letter-spacing:.02em}
+      input[type=text],input[type=number],select{background:#0f1917;color:var(--paper);border-color:#39514a;border-radius:6px}
+      input:focus,select:focus{border-color:var(--mint);box-shadow:0 0 0 3px rgba(200,241,105,.14)}
+      #status{color:var(--cyan);font-weight:700}
+      #uploads_panel{position:relative;background:rgba(23,35,33,.88)!important;border-color:var(--line)!important;color:var(--paper)}
+      #uploads_panel h3{color:var(--mint)}
+      a{color:var(--cyan)}
+      @media(max-width:760px){body{padding:26px 16px 42px}h2{font-size:2.6rem}.topbar{padding:10px}}
+    </style>
+  </head>
+  <body>
+    <h2>GREENTRACE Multi-user Clause Labeler</h2>
+    <p>Annotate clauses served by the server. Click <strong>Save</strong> to record an annotation and fetch the next item.</p>
+
+    <div class="topbar">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="save" class="btn primary">Save & Next</button>
+        <button id="skip" class="btn ghost">Skip</button>
+        <button id="export" class="btn ghost">Export</button>
+        <button id="show_uploads" class="btn ghost">Uploads</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="annotator_badge" style="padding:6px 10px;border-radius:999px;background:#e9fbf9;color:#0b3b36;font-weight:600">Not logged in</div>
+        <input id="login_user" placeholder="username" style="width:120px"/>
+        <input id="login_pass" placeholder="password" type="password" style="width:120px"/>
+        <button id="login_btn" class="btn ghost">Login</button>
+        <button id="logout_btn" class="btn ghost">Logout</button>
+      </div>
+    </div>
+
+    <div id="clause" style="margin-top:16px">Loading...</div>
+
+    <div class="controls">
+      <div>
+        <label>Numeric distance (meters):</label>
+        <input id="numeric_distance" type="number" step="1"/>
+      </div>
+      <div>
+        <label>Distance unit:</label>
+        <select id="distance_unit"><option value="m">m</option><option value="metre">metre</option><option value="km">km</option><option value="">(none)</option></select>
+      </div>
+      <div>
+        <label>Feature:</label>
+        <input id="feature" type="text" placeholder="river, stream, waterbody"/>
+      </div>
+      <div>
+        <label>Qualitative tag:</label>
+        <input id="qualitative_flag" type="text" placeholder="adequate measures, no discharge"/>
+      </div>
+      <div>
+        <label>Annotator ID:</label>
+        <input id="annotator" type="text"/>
+      </div>
+      <div>
+        <label>Notes:</label>
+        <input id="note" type="text"/>
+      </div>
+    </div>
+
+    <div id="uploads_panel" style="margin-top:18px; display:none">
+      <h3>Previous Uploads & Runs</h3>
+      <div id="uploads_list">Loading...</div>
+      <div id="uploads_preview"></div>
+    </div>
+
+    <script>
+      let current = null;
+
+      async function fetchNext(){
+        const res = await fetch('/api/next');
+        const j = await res.json();
+        if(!j.id){
+          document.getElementById('clause').textContent = 'No more items to annotate.';
+          document.getElementById('status').textContent = '';
+          current = null; return;
+        }
+        current = j;
+        document.getElementById('clause').textContent = j.clause_text;
+        // clear fields
+        document.getElementById('numeric_distance').value = '';
+        document.getElementById('distance_unit').value = '';
+        document.getElementById('feature').value = '';
+        document.getElementById('qualitative_flag').value = '';
+        document.getElementById('note').value = '';
+        document.getElementById('annotator').value = '';
+        updateStatus();
+      }
+
+      async function updateStatus(){
+        try{
+          const res = await fetch('/api/status');
+          const s = await res.json();
+          document.getElementById('status').textContent = `${s.annotated}/${s.total} annotated`;
+        }catch(e){document.getElementById('status').textContent = ''}
+      }
+
+      document.getElementById('save').addEventListener('click', async ()=>{
+        if(!current) return;
+          const payload = {
+            id: current.id,
+            annotator: document.getElementById('annotator').value || null,
+            annotation: {
+              numeric_distance: document.getElementById('numeric_distance').value || null,
+              distance_unit: document.getElementById('distance_unit').value || null,
+              feature: document.getElementById('feature').value || null,
+              qualitative_flag: document.getElementById('qualitative_flag').value || null,
+              note: document.getElementById('note').value || null
+            }
+          };
+          const token = localStorage.getItem('labeler_token');
+          const headers = {'Content-Type':'application/json'};
+          if(token) headers['Authorization'] = 'Bearer ' + token;
+          await fetch('/api/save', {method:'POST', headers, body: JSON.stringify(payload)});
+        fetchNext();
+      });
+
+      document.getElementById('skip').addEventListener('click', async ()=>{
+        if(!current) return; 
+        const token = localStorage.getItem('labeler_token');
+        const headers = {'Content-Type':'application/json'};
+        if(token) headers['Authorization'] = 'Bearer ' + token;
+        await fetch('/api/save', {method:'POST', headers, body: JSON.stringify({id: current.id, annotator:'skip', annotation:{skipped:true}})}); fetchNext();
+      });
+
+      document.getElementById('export').addEventListener('click', async ()=>{
+        const res = await fetch('/api/export'); const j = await res.json();
+        const blob = new Blob([JSON.stringify(j, null, 2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'annotations_export.json'; document.body.appendChild(a); a.click(); a.remove();
+      });
+
+      // Login/logout handlers
+      document.getElementById('login_btn').addEventListener('click', async ()=>{
+        const u = document.getElementById('login_user').value;
+        const p = document.getElementById('login_pass').value;
+        if(!u||!p) return alert('enter username and password');
+        const res = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username: u, password: p})});
+        const j = await res.json();
+        if(res.ok && j.token){ localStorage.setItem('labeler_token', j.token); alert('login ok'); document.getElementById('annotator').value = u; }
+        else alert('login failed: ' + (j.error||'unknown'));
+      });
+      document.getElementById('logout_btn').addEventListener('click', async ()=>{
+        const token = localStorage.getItem('labeler_token');
+        const headers = {};
+        if(token) headers['Authorization'] = 'Bearer ' + token;
+        await fetch('/api/logout', {method:'POST', headers});
+        localStorage.removeItem('labeler_token');
+        alert('logged out');
+      });
+
+      // keyboard shortcuts: Enter = Save, Space = Skip (when not focused in inputs)
+      window.addEventListener('keydown', (e)=>{
+        const active = document.activeElement;
+        const isInput = active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA');
+        if(e.key === 'Enter' && !e.shiftKey){
+          e.preventDefault(); document.getElementById('save').click();
+        }
+        if(e.code === 'Space' && !isInput){ e.preventDefault(); document.getElementById('skip').click(); }
+      });
+
+      document.getElementById('show_uploads').addEventListener('click', async ()=>{
+        const p = document.getElementById('uploads_panel');
+        if(p.style.display === 'none'){
+          p.style.display = 'block';
+          const res = await fetch('/api/uploads');
+          const runs = await res.json();
+          const list = document.getElementById('uploads_list'); list.innerHTML = '';
+          if(!runs || runs.length === 0){ list.textContent = 'No uploads found.'; return; }
+          for(const run of runs){
+            const rn = document.createElement('div'); rn.style.marginBottom = '10px';
+            const title = document.createElement('div'); title.textContent = run.run; title.style.fontWeight='600'; rn.appendChild(title);
+            const ul = document.createElement('div'); ul.style.marginLeft = '10px';
+            for(const f of run.files){
+              const safePath = f.path.replaceAll('\\','/');
+              const row = document.createElement('div');
+              if(f.name.toLowerCase().endsWith('.png') || f.name.toLowerCase().endsWith('.jpg')){
+                const a = document.createElement('a'); a.href = '/outputs/' + safePath; a.target = '_blank';
+                const img = document.createElement('img'); img.src = '/outputs/' + safePath; img.alt = f.name; a.appendChild(img); row.appendChild(a);
+              } else {
+                const a = document.createElement('a');
+                a.href = '/outputs/' + safePath;
+                a.textContent = f.name; a.target = '_blank';
+                row.appendChild(a);
+              }
+              ul.appendChild(row);
+            }
+            rn.appendChild(ul); list.appendChild(rn);
+          }
+        }else{ p.style.display = 'none'; }
+      });
+
+      // Auto-fill helper (client-side)
+      function autoFillForText(text){
+        try{
+          const distRe = /(\d+(?:[\.,]\d+)?)\s*(m|metre|meters|metres|km)\b/i;
+          const withinRe = /within\s*(\d+(?:[\.,]\d+)?)\s*(m|metre|meters|metres|km)\b/i;
+          const featRe = /\b(river|stream|waterbody|wetland|drain|drainage|lake|coast)\b/i;
+          const qualList = [[/adequate measures/i, 'adequate measures'],[/no discharge|prevent discharge|prohibit discharge/i, 'no discharge'],[/avoid alteration|alteration of natural drainage/i, 'avoid alteration'],[/no development|no activity/i, 'no development']];
+          let m = distRe.exec(text) || withinRe.exec(text);
+          if(m){ const num = m[1].replace(',', '.'); if(document.getElementById('numeric_distance').value === ''){ document.getElementById('numeric_distance').value = Number(num); } if(document.getElementById('distance_unit').value === ''){ document.getElementById('distance_unit').value = (m[2] || 'm'); } }
+          const fm = featRe.exec(text); if(fm && document.getElementById('feature').value === ''){ document.getElementById('feature').value = fm[1].toLowerCase(); }
+          for(const [pat, tag] of qualList){ if(pat.test(text) && document.getElementById('qualitative_flag').value === ''){ document.getElementById('qualitative_flag').value = tag; break; } }
+        }catch(e){console.warn('autofill error', e)}
+      }
+
+      // fetch first item on load
+      fetchNext().then(()=>{ if(current) autoFillForText(current.clause_text); });
+      setInterval(updateStatus, 5000);
+    </script>
+  </body>
+</html>

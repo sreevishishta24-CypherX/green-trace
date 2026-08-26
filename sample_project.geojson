@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "sample-project" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.56305, 12.85895],
+            [77.56313, 12.85895],
+            [77.56313, 12.85903],
+            [77.56305, 12.85903],
+            [77.56305, 12.85895]
+          ]
+        ]
+      }
+    }
+  ]
+}

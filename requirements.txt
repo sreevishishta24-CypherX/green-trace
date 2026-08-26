@@ -1,0 +1,16 @@
+geopandas
+shapely
+pyproj
+requests
+matplotlib
+pandas
+fiona
+fastapi
+uvicorn
+python-multipart
+pdfplumber
+openai
+earthengine-api
+pillow
+pytest
+reportlab

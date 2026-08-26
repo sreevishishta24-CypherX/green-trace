@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>GREENTRACE Clause Labeler</title>
+    <style>
+      body{font-family:Arial,Helvetica,sans-serif;margin:24px}
+      #clause{white-space:pre-wrap;background:#f7f7f7;padding:12px;border-radius:6px}
+      .controls{margin-top:12px}
+      .btn{padding:8px 10px;margin-right:8px}
+      label{display:block;margin-top:8px}
+      input[type=text],input[type=number],select{padding:6px;width:320px}
+    </style>
+  </head>
+  <body>
+    <h2>GREENTRACE Clause Labeler (Pilot)</h2>
+    <p>Loads a small seed set and lets annotators fill numeric distance, feature, and notes. Results can be downloaded as JSON.</p>
+
+    <div>
+      <button id="prev" class="btn">◀ Prev</button>
+      <button id="next" class="btn">Next ▶</button>
+      <button id="download" class="btn">Download Annotations</button>
+      <span id="index"></span>
+    </div>
+
+    <div id="clause" style="margin-top:16px"></div>
+
+    <div class="controls">
+      <label>Numeric distance (meters): <input id="numeric_distance" type="number" step="1"/></label>
+      <label>Distance unit: <select id="distance_unit"><option value="m">m</option><option value="metre">metre</option><option value="km">km</option><option value="">(none)</option></select></label>
+      <label>Feature: <input id="feature" type="text" placeholder="river, stream, waterbody"/></label>
+      <label>Qualitative tag: <input id="qualitative_flag" type="text" placeholder="adequate measures, no discharge"/></label>
+      <label>Annotator ID: <input id="annotator" type="text"/></label>
+      <label>Notes: <input id="note" type="text" style="width:640px"/></label>
+    </div>
+
+    <script>
+      let data = [];
+      let idx = 0;
+
+      async function loadData(){
+        const res = await fetch('data/seed_clauses.json');
+        data = await res.json();
+        show(idx);
+      }
+
+      function show(i){
+        const item = data[i];
+        document.getElementById('index').textContent = `${i+1} / ${data.length}  (id=${item.id})`;
+        document.getElementById('clause').textContent = item.clause_text;
+        document.getElementById('numeric_distance').value = item.numeric_distance ?? '';
+        document.getElementById('distance_unit').value = item.distance_unit ?? '';
+        document.getElementById('feature').value = item.feature ?? '';
+        document.getElementById('qualitative_flag').value = item.qualitative_flag ?? '';
+        document.getElementById('note').value = item.note ?? '';
+        document.getElementById('annotator').value = item.annotator ?? '';
+      }
+
+      function saveCurrent(){
+        const item = data[idx];
+        item.numeric_distance = document.getElementById('numeric_distance').value === '' ? null : Number(document.getElementById('numeric_distance').value);
+        item.distance_unit = document.getElementById('distance_unit').value || null;
+        item.feature = document.getElementById('feature').value || null;
+        item.qualitative_flag = document.getElementById('qualitative_flag').value || null;
+        item.note = document.getElementById('note').value || null;
+        item.annotator = document.getElementById('annotator').value || null;
+        item.timestamp = new Date().toISOString();
+      }
+
+      document.getElementById('prev').addEventListener('click', ()=>{
+        saveCurrent();
+        if(idx>0) idx--; show(idx);
+      });
+      document.getElementById('next').addEventListener('click', ()=>{
+        saveCurrent();
+        if(idx < data.length-1) idx++; show(idx);
+      });
+
+      document.getElementById('download').addEventListener('click', ()=>{
+        saveCurrent();
+        const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'annotations.json'; document.body.appendChild(a); a.click(); a.remove();
+      });
+
+      function autoFillForText(text){
+        try{
+          // simple regexes duplicated from extractor.py for client-side convenience
+          const distRe = /(\d+(?:[\.,]\d+)?)\s*(m|metre|meters|metres|km)\b/i;
+          const withinRe = /within\s*(\d+(?:[\.,]\d+)?)\s*(m|metre|meters|metres|km)\b/i;
+          const featRe = /\b(river|stream|waterbody|wetland|drain|drainage|lake)\b/i;
+          const qualList = [
+            [/adequate measures/i, 'adequate measures'],
+            [/no discharge|prevent discharge|prohibit discharge/i, 'no discharge'],
+            [/avoid alteration|alteration of natural drainage/i, 'avoid alteration'],
+            [/no development|no activity/i, 'no development']
+          ];
+
+          let m = distRe.exec(text) || withinRe.exec(text);
+          if(m){
+            const num = m[1].replace(',', '.');
+            if(document.getElementById('numeric_distance').value === ''){
+              document.getElementById('numeric_distance').value = Number(num);
+            }
+            if(document.getElementById('distance_unit').value === ''){
+              document.getElementById('distance_unit').value = (m[2] || 'm');
+            }
+          }
+          const fm = featRe.exec(text);
+          if(fm && document.getElementById('feature').value === ''){
+            document.getElementById('feature').value = fm[1].toLowerCase();
+          }
+          for(const [pat, tag] of qualList){
+            if(pat.test(text) && document.getElementById('qualitative_flag').value === ''){
+              document.getElementById('qualitative_flag').value = tag; break;
+            }
+          }
+        }catch(e){console.warn('autofill error', e)}
+      }
+
+      document.getElementById('prev').addEventListener('click', ()=>{
+        saveCurrent();
+        if(idx>0) idx--; show(idx);
+      });
+      document.getElementById('next').addEventListener('click', ()=>{
+        saveCurrent();
+        if(idx < data.length-1) idx++; show(idx);
+      });
+
+      document.getElementById('download').addEventListener('click', ()=>{
+        saveCurrent();
+        const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'annotations.json'; document.body.appendChild(a); a.click(); a.remove();
+      });
+
+      // Auto-fill button
+      const autoBtn = document.createElement('button');
+      autoBtn.textContent = 'Auto-fill';
+      autoBtn.className = 'btn';
+      autoBtn.addEventListener('click', ()=>{ autoFillForText(data[idx].clause_text); });
+      document.querySelector('div').appendChild(autoBtn);
+
+      loadData();
+    </script>
+  </body>
+</html>

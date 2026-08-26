@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.env
+.venv/
+venv/
+ENV/
+*.egg-info/
+/dist/
+/build/
+
+# VSCode
+.vscode/
+
+# node
+node_modules/
+*.tsbuildinfo
+
+# outputs and large data
+outputs/
+frontend/dist/
+
+# secrets and local envs
+*.env
+*.secret
+tools/labeler/data/users.json
+tools/labeler/data/sessions.json
+
+# Docker
+*.tar
+
+# OS files
+.DS_Store
+Thumbs.db
